@@ -32,6 +32,7 @@ namespace MurderInvitation
 
             else if (Location.Armory == myData.CurrentLocation)
             {
+                
                 return new GameMove(myData.CurrentLocation, GameAction.UnlockSafe, myData.Name, "Be gentle...");
             }
 
@@ -41,14 +42,45 @@ namespace MurderInvitation
     }
 
     class ChrisKillerController : ActorController
-    {
+    { 
         public ChrisKillerController(string name) : base(name)
         {
         }
 
         public override GameMove GenerateMove(GameData gameData)
         {
-            return new GameMove(GameMove.GetRandomLocation(), GameAction.StabAttack, "", "My blade thirsts...");
+
+            var query = from actor in gameData.actorDataList
+                        where actor.Name == name
+                        select actor;
+
+            ActorData myData = query.First();
+
+            var gunner = from actor in gameData.actorDataList
+                         where actor.Items.Contains(Item.Gun)
+                         select actor;
+
+            if ((myData.Items.Contains(Item.Gun)) && (gameData.generatorHp < 100))
+            {
+                return new GameMove(Location.Basement, GameAction.StabAttack, "", "*Maniacal laugh*");
+            }
+
+            else if (gameData.isGunTaken == true)
+            {
+                foreach(var actor in gunner)
+                {
+                    if(actor.Items.Contains(Item.Gun))
+                    {
+                        return new GameMove(actor.CurrentLocation, GameAction.StabAttack, actor.Name, "I've... found you!");
+                    }
+                }
+            }
+
+            else if(gameData.generatorHp <=0)
+            {
+                return new GameMove(Location.Exit, GameAction.StabAttack, "", "Oh you sweet child!");
+            }
+            return new GameMove(Location.Exit, GameAction.StabAttack, "", "YOU WILL NEVER ESCAPE!");
         }
     }
 
